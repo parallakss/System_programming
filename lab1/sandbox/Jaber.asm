@@ -1,14 +1,24 @@
-format ELF executable
-entry start
+format ELF
 
-segment readable executable
+section '.data' writeable
+    surname    db 'Жабер', 0x0A
+    surname_len = $ - surname
 
-start:
+    name       db 'Илья', 0x0A
+    name_len = $ - name
+
+    patronymic db 'Анварович', 0x0A
+    patronymic_len = $ - patronymic
+
+section '.text' executable
+public _start
+
+_start:
     ; Вывод фамилии
     mov eax, 4          ; sys_write
     mov ebx, 1          ; stdout
-    mov ecx, surname    ; строка фамилии
-    mov edx, surname_len ; длина
+    mov ecx, surname
+    mov edx, surname_len
     int 0x80
 
     ; Вывод имени
@@ -29,14 +39,3 @@ start:
     mov eax, 1          ; sys_exit
     xor ebx, ebx        ; код 0
     int 0x80
-
-segment readable writeable
-
-surname    db 'Жабер', 0x0A    ; 
-surname_len = $ - surname
-
-name       db 'Илья', 0x0A      ;
-name_len = $ - name
-
-patronymic db 'Анварович', 0x0A  ; 
-patronymic_len = $ - patronymic
