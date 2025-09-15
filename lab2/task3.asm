@@ -1,4 +1,4 @@
-format ELF64
+format ELF
 
 section '.data' writeable
     symbol db '8'
@@ -13,46 +13,52 @@ section '.text' executable
 public _start
 
 _start:
-    mov r12, 20               ; высота треугольника (20 строк)
-    mov r13, 1                ; текущее количество символов в строке
+    mov ebx, 20               ; счетчик строк
+    mov ecx, 1                ; символов в строке
     
 .triangle_loop:
-    ; Заполняем строку символами '8'
-    mov rdi, line_buffer
-    mov rcx, r13
+    push ecx
+    push ebx
+    
+    ; Заполняем строку
+    mov edi, line_buffer
+    mov eax, ecx
     mov al, [symbol]
     
 .fill_line:
-    mov [rdi], al
-    inc rdi
-    loop .fill_line
+    mov [edi], al
+    inc edi
+    dec ecx
+    jnz .fill_line
     
-    mov byte [rdi], 10        ; добавляем перевод строки
+    mov byte [edi], 10
+    
+    ; Восстанавливаем количество символов
+    pop ebx
+    pop ecx
+    push ecx
     
     ; Выводим строку
-    mov rax, 1
-    mov rdi, 1
-    mov rsi, line_buffer
-    mov rdx, r13
-    inc rdx                   ; +1 для перевода строки
-    syscall
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, line_buffer
+    mov edx, ecx
+    inc edx
+    int 0x80
     
-    ; Увеличиваем количество символов для следующей строки
-    inc r13
-    
-    ; Проверяем, не достигли ли максимальной высоты
-    dec r12
+    pop ecx
+    inc ecx                   ; увеличиваем для следующей строки
+    dec ebx                   ; уменьшаем счетчик строк
     jnz .triangle_loop
     
-    ; Выводим сообщение о количестве символов
-    ; Сумма арифметической прогрессии: n*(a1+an)/2 = 20*(1+20)/2 = 210
-    mov rax, 1
-    mov rdi, 1
-    mov rsi, total_msg
-    mov rdx, total_msg_len
-    syscall
+    ; Выводим сообщение
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, total_msg
+    mov edx, total_msg_len
+    int 0x80
     
     ; Завершение
-    mov rax, 60
-    xor rdi, rdi
-    syscall
+    mov eax, 1
+    xor ebx, ebx
+    int 0x80

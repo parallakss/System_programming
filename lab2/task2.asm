@@ -1,4 +1,4 @@
-format ELF64
+format ELF
 
 section '.data' writeable
     symbol db '$'
@@ -13,43 +13,43 @@ public _start
 
 _start:
     ; Заполняем буфер
-    mov rdi, buffer
-    mov rcx, 153
+    mov edi, buffer
+    mov ecx, 153
     mov al, [symbol]
 .fill_buffer:
-    mov [rdi], al
-    inc rdi
+    mov [edi], al
+    inc edi
     loop .fill_buffer
     
     ; Выводим матрицу 9x17
-    mov rsi, buffer
-    mov rcx, 17
+    mov esi, buffer
+    mov ecx, 17
     
 .matrix_loop:
-    push rcx
-    mov rdi, matrix_buffer
-    mov rcx, 9
+    push ecx
+    mov edi, matrix_buffer
+    mov ecx, 9
     
 .fill_row:
-    mov al, [rsi]
-    mov [rdi], al
-    inc rsi
-    inc rdi
+    mov al, [esi]
+    mov [edi], al
+    inc esi
+    inc edi
     loop .fill_row
     
-    mov byte [rdi], 10
+    mov byte [edi], 10
     
     ; Вывод строки
-    mov rax, 1
-    mov rdi, 1
-    mov rsi, matrix_buffer
-    mov rdx, 10
-    syscall
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, matrix_buffer
+    mov edx, 10
+    int 0x80
     
-    pop rcx
+    pop ecx
     loop .matrix_loop
     
     ; Завершение
-    mov rax, 60
-    xor rdi, rdi
-    syscall
+    mov eax, 1
+    xor ebx, ebx
+    int 0x80
