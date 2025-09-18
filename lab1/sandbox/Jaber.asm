@@ -14,28 +14,25 @@ section '.text' executable
 public _start
 
 _start:
-    ; Вывод фамилии
-    mov eax, 4          ; sys_write
-    mov ebx, 1          ; stdout
+    
+    mov eax, 4          
+    mov ebx, 1         
     mov ecx, surname
     mov edx, surname_len
     int 0x80
 
-    ; Вывод имени
     mov eax, 4
     mov ebx, 1
     mov ecx, name
     mov edx, name_len
     int 0x80
 
-    ; Вывод отчества
     mov eax, 4
     mov ebx, 1
     mov ecx, patronymic
     mov edx, patronymic_len
     int 0x80
 
-    ; Завершение программы
-    mov eax, 1          ; sys_exit
-    xor ebx, ebx        ; код 0
+    mov eax, 1          
+    xor ebx, ebx        
     int 0x80
