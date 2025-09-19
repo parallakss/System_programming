@@ -33,3 +33,5 @@ uname -a >> "Work/Лабораторная работа 1/Result_3"
 date >> "Work/Лабораторная работа 1/Result_3"
 mkdir Lab_1
 mv sandbox Work Work_files Lab_1/
+git add .
+git commit -m "Завершение лабораторной работы: работа с файлами"
