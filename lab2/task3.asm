@@ -13,14 +13,13 @@ section '.text' executable
 public _start
 
 _start:
-    mov ebx, 20               ; счетчик строк
-    mov ecx, 1                ; символов в строке
+    mov ebx, 20              
+    mov ecx, 1                
     
 .triangle_loop:
     push ecx
     push ebx
     
-    ; Заполняем строку
     mov edi, line_buffer
     mov eax, ecx
     mov al, [symbol]
@@ -33,12 +32,10 @@ _start:
     
     mov byte [edi], 10
     
-    ; Восстанавливаем количество символов
     pop ebx
     pop ecx
     push ecx
     
-    ; Выводим строку
     mov eax, 4
     mov ebx, 1
     mov ecx, line_buffer
@@ -47,18 +44,16 @@ _start:
     int 0x80
     
     pop ecx
-    inc ecx                   ; увеличиваем для следующей строки
-    dec ebx                   ; уменьшаем счетчик строк
+    inc ecx                   
+    dec ebx                   
     jnz .triangle_loop
     
-    ; Выводим сообщение
     mov eax, 4
     mov ebx, 1
     mov ecx, total_msg
     mov edx, total_msg_len
     int 0x80
     
-    ; Завершение
     mov eax, 1
     xor ebx, ebx
     int 0x80

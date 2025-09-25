@@ -25,28 +25,24 @@ _start:
     
     mov byte [edi], 10
     
-    ; Выводим исходную строку
     mov eax, 4
     mov ebx, 1
     mov ecx, original_str
     mov edx, str_len
     int 0x80
     
-    ; Перевод строки
     mov eax, 4
     mov ebx, 1
     mov ecx, newline
     mov edx, 1
     int 0x80
     
-    ; Выводим перевернутую строку
     mov eax, 4
     mov ebx, 1
     mov ecx, reversed_str
     mov edx, str_len + 1
     int 0x80
     
-    ; Завершение
     mov eax, 1
     xor ebx, ebx
     int 0x80

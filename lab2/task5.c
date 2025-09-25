@@ -5,7 +5,6 @@ int main() {
     long long sum = 0;
     long long temp = N;
     
-    // Вычисляем сумму цифр
     while (temp > 0) {
         sum += temp % 10;
         temp /= 10;
