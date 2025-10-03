@@ -9,7 +9,6 @@ section '.text' executable
 public _start
 
 _start:
-    ; Ввод a
     mov rax, SYS_WRITE
     mov rdi, 1
     mov rsi, prompt_a
@@ -24,9 +23,8 @@ _start:
     
     mov rdi, input_buffer
     call string_to_int
-    mov [a], eax          ; сохраняем как 32-битное число
+    mov [a], eax          
 
-    ; Ввод b
     mov rax, SYS_WRITE
     mov rdi, 1
     mov rsi, prompt_b
@@ -41,9 +39,8 @@ _start:
     
     mov rdi, input_buffer
     call string_to_int
-    mov [b], eax          ; сохраняем как 32-битное число
+    mov [b], eax         
 
-    ; Ввод c
     mov rax, SYS_WRITE
     mov rdi, 1
     mov rsi, prompt_c
@@ -58,21 +55,17 @@ _start:
     
     mov rdi, input_buffer
     call string_to_int
-    mov [c], eax          ; сохраняем как 32-битное число
+    mov [c], eax          
 
-    ; Вычисляем выражение: ((((a/b)-a)/b)*c)+a
     call calculate_expression
 
-    ; Выводим результат
     call print_result
 
-    ; Завершаем программу
     mov rax, SYS_EXIT
     xor rdi, rdi
     syscall
 
 string_to_int:
-    ; Преобразует строку в число (32-битное)
     xor eax, eax
     xor ecx, ecx
 .convert_loop:
@@ -90,51 +83,41 @@ string_to_int:
     ret
 
 calculate_expression:
-    ; Вычисляем ((((a/b)-a)/b)*c)+a (32-битная арифметика)
     
-    ; a/b
+    
     mov eax, [a]
-    cdq                   ; расширяем eax в edx:eax
-    idiv dword [b]        ; eax = a/b, edx = остаток
+    cdq                   
+    idiv dword [b]        
     
-    ; (a/b) - a
-    sub eax, [a]          ; eax = (a/b) - a
+    sub eax, [a]          
     
-    ; ((a/b)-a)/b
-    cdq                   ; расширяем eax в edx:eax
-    idiv dword [b]        ; eax = ((a/b)-a)/b
+    cdq                  
+    idiv dword [b]        
     
-    ; (((a/b)-a)/b)*c
-    imul eax, [c]         ; eax = (((a/b)-a)/b)*c
-    
-    ; ((((a/b)-a)/b)*c)+a
-    add eax, [a]          ; eax = ((((a/b)-a)/b)*c)+a
+    imul eax, [c]         
+
+    add eax, [a]         
     
     mov [result], eax
     ret
 
 print_result:
-    ; Выводим "Result: "
     mov rax, SYS_WRITE
     mov rdi, 1
     mov rsi, result_label
     mov rdx, result_label_len
     syscall
 
-    ; Выводим число
     mov eax, [result]
     mov rdi, output_buffer
     call int_to_string
     
-    ; Добавляем перевод строки
     mov byte [rdi], 10
     inc rdi
     
-    ; Вычисляем длину
     mov rdx, rdi
     sub rdx, output_buffer
     
-    ; Выводим число
     mov rax, SYS_WRITE
     mov rdi, 1
     mov rsi, output_buffer
@@ -143,21 +126,17 @@ print_result:
     ret
 
 int_to_string:
-    ; Преобразует целое (32-битное) в строку
     test eax, eax
     jnz .convert
     
-    ; Случай числа 0
     mov byte [rdi], '0'
     inc rdi
     ret
     
 .convert:
-    ; Проверяем знак
     cmp eax, 0
     jge .positive
-    
-    ; Отрицательное число
+
     mov byte [rdi], '-'
     inc rdi
     neg eax

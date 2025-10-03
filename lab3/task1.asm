@@ -21,43 +21,35 @@ _start:
     mov rdx, 2
     syscall
 
-    ; Берем первый символ
     mov al, [input_buffer]
     mov [char], al
     
-    ; Выводим "ASCII code: "
     mov rax, SYS_WRITE
     mov rdi, 1
     mov rsi, result_label
     mov rdx, result_label_len
     syscall
 
-    ; Преобразуем ASCII код в строку
     movzx rax, al
     mov rdi, output_buffer
     call int_to_string
     
-    ; Добавляем перевод строки
     mov byte [rdi], 10
     inc rdi
     
-    ; Вычисляем длину
     mov rdx, rdi
     sub rdx, output_buffer
     
-    ; Выводим результат
     mov rax, SYS_WRITE
     mov rdi, 1
     mov rsi, output_buffer
     syscall
     
-    ; Завершаем программу
     mov rax, SYS_EXIT
     xor rdi, rdi
     syscall
 
 int_to_string:
-    ; Преобразует число в строку
     mov rbx, 10
     xor rcx, rcx
     
