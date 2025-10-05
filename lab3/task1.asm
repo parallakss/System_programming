@@ -9,14 +9,12 @@ section '.text' executable
 public _start
 
 _start:
-    ; Выводим приглашение
     mov rax, SYS_WRITE
     mov rdi, 1
     mov rsi, prompt_msg
     mov rdx, prompt_len
     syscall
-
-    ; Читаем символ
+    
     mov rax, SYS_READ
     mov rdi, 0
     mov rsi, input_buffer
