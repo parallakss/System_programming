@@ -1,6 +1,5 @@
 format ELF64
 
-; Константы для системных вызовов
 SYS_READ = 0
 SYS_WRITE = 1
 SYS_OPEN = 2
