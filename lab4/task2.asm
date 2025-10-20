@@ -9,7 +9,6 @@ section '.text' executable
 public _start
 
 _start:
-    ; Выводим приглашение для ввода
     mov rax, SYS_WRITE
     mov rdi, 1
     mov rsi, prompt_msg
