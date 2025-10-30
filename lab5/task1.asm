@@ -289,6 +289,5 @@ output_fd dq 0
 letters dq 0
 digits dq 0
 
-; Буферы
 buffer rb BUFFER_SIZE
 output_buffer rb 256
