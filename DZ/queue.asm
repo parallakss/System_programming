@@ -453,7 +453,7 @@ queue_destroy:
     
 .no_buffer:
     pop rdi
-    ; Освобождаем саму структуру
+
     mov rax, SYS_BRK
     syscall
     ret
