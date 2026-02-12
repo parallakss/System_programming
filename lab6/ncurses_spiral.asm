@@ -1,3 +1,13 @@
+; -*- coding: utf-8 -*-
+; Лабораторная работа №6
+; Вариант: алгоритм [1] – движение змейкой по колонкам
+; Движение: вниз до границы → вправо → вверх до границы → вправо → вниз до границы → ...
+; Цвета: COLOR_CYAN / COLOR_YELLOW
+; Управление: '\' – скорость, 'q' – выход
+; Компиляция: fasm ncurses_spiral.asm ncurses_spiral.o
+; Линковка:   ld -dynamic-linker /lib64/ld-linux-x86-64.so.2 \
+;              ncurses_spiral.o -lc -lncurses -o ncurses_spiral
+
 format ELF64
 public _start
 
@@ -32,22 +42,22 @@ COLOR_YELLOW  = 3
 ; ------------------------------------------------------------
 ; Параметры движения
 ; ------------------------------------------------------------
-START_X       = 40
-START_Y       = 12
+START_X       = 0        ; Левый верхний угол
+START_Y       = 0
 COLS          = 80
 ROWS          = 24
-INIT_SPEED    = 100
-MIN_SPEED     = 30
-MAX_SPEED     = 300
-SPEED_STEP    = 20
+INIT_SPEED    = 30
+MIN_SPEED     = 1        ; Минимальная задержка 1мс (очень быстро)
+MAX_SPEED     = 100
+SPEED_STEP    = 5        ; Шаг изменения скорости
 
-DIR_RIGHT = 0
-DIR_DOWN  = 1
-DIR_LEFT  = 2
-DIR_UP    = 3
+DIR_DOWN      = 0
+DIR_UP        = 1
+DIR_RIGHT     = 2
 
 KEY_BACKSLASH = 92      ; '\'
 KEY_Q         = 113     ; 'q'
+KEY_Q_UPPER   = 81      ; 'Q'
 
 ; ------------------------------------------------------------
 ; Системные вызовы
@@ -116,12 +126,13 @@ _start:
     mov  qword [pos_x], START_X
     mov  qword [pos_y], START_Y
     mov  qword [speed], INIT_SPEED
-    mov  qword [color], 1
+    mov  qword [color], 1          ; Начинаем с CYAN
 
-    mov  qword [step_size], 1
-    mov  qword [step_cnt], 0
-    mov  qword [direction], DIR_RIGHT
-    mov  qword [total_steps], 0
+    mov  qword [direction], DIR_DOWN
+    mov  qword [top_row], 0
+    mov  qword [bottom_row], ROWS-1
+    mov  qword [current_col], 0
+    mov  qword [running], 1        ; Флаг работы программы
 
     jmp  main_loop
 
@@ -129,13 +140,17 @@ _start:
 ; Главный цикл
 ; ------------------------------------------------------------
 main_loop:
+    ; Проверяем флаг работы программы
+    cmp  qword [running], 0
+    je   exit_program
+
     ; Устанавливаем цвет
     mov  rdi, [color]
     call COLOR_PAIR
     mov  rdi, rax
     call attron
 
-    ; Рисуем символ
+    ; Рисуем символ в текущей позиции
     mov  rdi, [pos_y]
     mov  rsi, [pos_x]
     mov  rdx, '#'
@@ -157,87 +172,106 @@ main_loop:
     ; Проверка клавиш
     call getch
     
-    ; Проверяем 'q' для выхода
+    ; Проверяем 'q' или 'Q' для выхода
     cmp  eax, KEY_Q
-    je   exit_program
+    je   .exit_command
+    cmp  eax, KEY_Q_UPPER
+    je   .exit_command
     
     ; Проверяем '\' для изменения скорости
     cmp  eax, KEY_BACKSLASH
     je   change_speed
 
-    call move_spiral
+    call move_snake
+    jmp  main_loop
+
+.exit_command:
+    mov  qword [running], 0
     jmp  main_loop
 
 ; ------------------------------------------------------------
-; Движение по спирали
+; Движение змейкой по колонкам
 ; ------------------------------------------------------------
-move_spiral:
+move_snake:
     push rbp
     mov  rbp, rsp
 
     mov  rax, [direction]
-    cmp  rax, DIR_RIGHT
-    je   .right
     cmp  rax, DIR_DOWN
-    je   .down
-    cmp  rax, DIR_LEFT
-    je   .left
-    dec  qword [pos_y]
-    jmp  .check_bounds
-.right:
-    inc  qword [pos_x]
-    jmp  .check_bounds
-.down:
+    je   .move_down
+    cmp  rax, DIR_UP
+    je   .move_up
+    cmp  rax, DIR_RIGHT
+    je   .move_right
+    jmp  .done
+
+.move_down:
+    ; Движение вниз
+    mov  rax, [pos_y]
+    cmp  rax, [bottom_row]
+    jge  .bottom_reached
     inc  qword [pos_y]
-    jmp  .check_bounds
-.left:
-    dec  qword [pos_x]
-
-.check_bounds:
-    cmp  qword [pos_x], 0
-    jl   .wrap
-    cmp  qword [pos_x], COLS-1
-    jg   .wrap
-    cmp  qword [pos_y], 0
-    jl   .wrap
-    cmp  qword [pos_y], ROWS-1
-    jg   .wrap
-    jmp  .check_step
-
-.wrap:
-    call switch_color
-    mov  qword [pos_x], START_X
-    mov  qword [pos_y], START_Y
-    mov  qword [step_size], 1
-    mov  qword [step_cnt], 0
+    jmp  .done
+    
+.bottom_reached:
+    ; Достигли нижней границы - двигаемся вправо
     mov  qword [direction], DIR_RIGHT
-    pop  rbp
-    ret
+    jmp  .done
 
-.check_step:
-    inc  qword [step_cnt]
-    mov  rax, [step_cnt]
-    cmp  rax, [step_size]
-    jl   .done
+.move_up:
+    ; Движение вверх
+    mov  rax, [pos_y]
+    cmp  rax, [top_row]
+    jle  .top_reached
+    dec  qword [pos_y]
+    jmp  .done
+    
+.top_reached:
+    ; Достигли верхней границы - двигаемся вправо
+    mov  qword [direction], DIR_RIGHT
+    jmp  .done
 
-    mov  qword [step_cnt], 0
-    mov  rax, [direction]
-    inc  rax
-    and  rax, 3
-    mov  [direction], rax
-
-    inc  qword [total_steps]
-    mov  rax, [total_steps]
+.move_right:
+    ; Движение вправо на 1 символ
+    inc  qword [pos_x]
+    inc  qword [current_col]
+    
+    ; Проверяем, не достигли ли правой границы экрана
+    mov  rax, [pos_x]
+    cmp  rax, COLS
+    jge  .finished
+    
+    ; Определяем направление вертикального движения
+    ; Если текущая колонка нечетная - двигаемся вверх
+    ; Если четная - двигаемся вниз
+    mov  rax, [current_col]
     and  rax, 1
-    jnz  .done
-    inc  qword [step_size]
+    cmp  rax, 0
+    je   .even_col
+    
+    ; Нечетная колонка - двигаемся вверх
+    mov  qword [direction], DIR_UP
+    jmp  .check_color_change
+    
+.even_col:
+    ; Четная колонка - двигаемся вниз
+    mov  qword [direction], DIR_DOWN
+
+.check_color_change:
+    ; Меняем цвет при переходе на новую колонку
+    call switch_color
+    jmp  .done
+
+.finished:
+    ; Достигли правой границы - завершаем программу
+    mov  qword [running], 0
 
 .done:
     pop  rbp
     ret
 
 ; ------------------------------------------------------------
-; Переключение цвета
+; Переключение цвета (CYAN <-> YELLOW)
 ; ------------------------------------------------------------
 switch_color:
     cmp  qword [color], 1
@@ -252,15 +286,27 @@ switch_color:
 ; Изменение скорости
 ; ------------------------------------------------------------
 change_speed:
+    push rbp
+    mov  rbp, rsp
+    
+    ; Увеличиваем скорость (уменьшаем задержку)
     sub  qword [speed], SPEED_STEP
+    
+    ; Проверяем минимальную скорость
     cmp  qword [speed], MIN_SPEED
     jge  .check_max
+    
+    ; Достигли минимума - сбрасываем на максимум
     mov  qword [speed], MAX_SPEED
+    jmp  .done
+    
 .check_max:
     cmp  qword [speed], MAX_SPEED
     jle  .done
     mov  qword [speed], MAX_SPEED
+    
 .done:
+    pop  rbp
     jmp  main_loop
 
 ; ------------------------------------------------------------
@@ -296,12 +342,15 @@ err_msg_len  = $ - err_msg
 ; ------------------------------------------------------------
 section '.bss' writeable
 
-stdscr_ptr  dq ?
-pos_x       dq ?
-pos_y       dq ?
-speed       dq ?
-color       dq ?
-step_size   dq ?
-step_cnt    dq ?
-direction   dq ?
-total_steps dq ?
+stdscr_ptr    dq ?
+pos_x         dq ?
+pos_y         dq ?
+speed         dq ?
+color         dq ?
+
+; Границы движения
+top_row       dq ?
+bottom_row    dq ?
+direction     dq ?
+current_col   dq ?
+running       dq ?
