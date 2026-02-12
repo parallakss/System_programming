@@ -1,7 +1,7 @@
 format ELF
 
 section '.data' writeable
-    original_str db 'eWTAghRYsHMeIYxtfCbeQoDvnQaKdRkKzJboR',0
+    original_str db 'abcdefg',0
     str_len = $ - original_str - 1
     newline db 10
 

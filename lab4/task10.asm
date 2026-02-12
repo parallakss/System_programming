@@ -10,7 +10,7 @@ public _start
 
 _start:
     ; Инициализация счетчика попыток
-    mov byte [attempts], 5
+    mov byte [attempts], 3
 
 auth_loop:
     ; Выводим приглашение для ввода пароля
