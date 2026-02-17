@@ -1,13 +1,3 @@
-; -*- coding: utf-8 -*-
-; Лабораторная работа №6
-; Вариант: алгоритм [1] – движение змейкой по колонкам
-; Движение: вниз до границы → вправо → вверх до границы → вправо → вниз до границы → ...
-; Цвета: COLOR_CYAN / COLOR_YELLOW
-; Управление: '\' – скорость, 'q' – выход
-; Компиляция: fasm ncurses_spiral.asm ncurses_spiral.o
-; Линковка:   ld -dynamic-linker /lib64/ld-linux-x86-64.so.2 \
-;              ncurses_spiral.o -lc -lncurses -o ncurses_spiral
-
 format ELF64
 public _start
 
@@ -46,10 +36,10 @@ START_X       = 0        ; Левый верхний угол
 START_Y       = 0
 COLS          = 80
 ROWS          = 24
-INIT_SPEED    = 30
+INIT_SPEED    = 1
 MIN_SPEED     = 1        ; Минимальная задержка 1мс (очень быстро)
-MAX_SPEED     = 100
-SPEED_STEP    = 5        ; Шаг изменения скорости
+MAX_SPEED     = 200
+SPEED_STEP    = 30        ; Шаг изменения скорости
 
 DIR_DOWN      = 0
 DIR_UP        = 1
