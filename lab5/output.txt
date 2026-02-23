@@ -1,13 +1,2 @@
-dlrow olleH.
-
-
-tset a si sihT!
- 
-
-   
-
-uoy era woH?
-
-
-
-
+number of letters:3
+number of digits:0

@@ -1,109 +1,142 @@
 #include <stdio.h>
-#include <stdint.h>
+#include <stdlib.h>
 
-// Объявления функций из ассемблера
-extern void* queue_init(uint64_t capacity);
-extern int queue_push_back(void* queue, uint64_t value);
-extern uint64_t queue_pop_front(void* queue);
-extern void queue_fill_random(void* queue, uint64_t count);
+// Прототипы функций из ассемблерного модуля
+extern void* queue_init(long capacity);
+extern int queue_push_back(void* queue, long value);
+extern long queue_pop_front(void* queue);
+extern void queue_fill_random(void* queue, long count);
 extern void queue_remove_even(void* queue);
-extern uint64_t queue_count_ends_with_1(void* queue);
-extern uint64_t queue_count_even(void* queue);
-extern uint64_t queue_size(void* queue);
+extern long queue_count_ends_with_1(void* queue);
+extern long queue_count_even(void* queue);
+extern long queue_size(void* queue);
 extern int queue_is_empty(void* queue);
 extern void queue_destroy(void* queue);
 
-// Вспомогательная функция для печати очереди
-void print_queue(void* queue, const char* message) {
-    printf("%s\n", message);
-    printf("Размер очереди: %lu\n", queue_size(queue));
+// Функция для вывода всех элементов очереди (без изменения)
+void print_queue(void* queue) {
+    long size = queue_size(queue);
+    printf("Размер очереди: %ld\n", size);
     printf("Элементы: ");
     
-    // Создаем временную копию для обхода
-    void* temp = queue_init(16);
-    uint64_t size = queue_size(queue);
-    
-    for (uint64_t i = 0; i < size; i++) {
-        uint64_t value = queue_pop_front(queue);
-        printf("%lu ", value);
-        queue_push_back(temp, value);
-        queue_push_back(queue, value);
+    if (size == 0) {
+        printf("(пусто)\n");
+        return;
     }
     
-    // Восстанавливаем оригинальную очередь
-    for (uint64_t i = 0; i < size; i++) {
-        uint64_t value = queue_pop_front(temp);
-        queue_push_back(queue, value);
+    // Создаем временный массив для хранения элементов
+    long* temp = malloc(size * sizeof(long));
+    if (!temp) {
+        printf("Ошибка выделения памяти\n");
+        return;
     }
     
-    queue_destroy(temp);
-    printf("\n\n");
+    // Извлекаем все элементы и сохраняем во временный массив
+    for (int i = 0; i < size; i++) {
+        temp[i] = queue_pop_front(queue);
+    }
+    
+    // Выводим элементы
+    for (int i = 0; i < size; i++) {
+        printf("%ld ", temp[i]);
+    }
+    printf("\n");
+    
+    // Возвращаем элементы обратно в очередь
+    for (int i = 0; i < size; i++) {
+        queue_push_back(queue, temp[i]);
+    }
+    
+    free(temp);
+}
+
+// Функция для проверки внутреннего состояния очереди
+void debug_queue(void* queue) {
+    // Получаем указатели на внутренние поля
+    // Это опасно и работает только для отладки!
+    unsigned long* ptr = (unsigned long*)queue;
+    printf("=== ОТЛАДКА ===\n");
+    printf("buffer_ptr: %p\n", (void*)ptr[0]);
+    printf("capacity: %ld\n", ptr[1]);
+    printf("size: %ld\n", ptr[2]);
+    printf("front: %ld\n", ptr[3]);
+    printf("rear: %ld\n", ptr[4]);
+    printf("===============\n");
 }
 
 int main() {
     printf("=== Демонстрация работы очереди на ассемблере ===\n\n");
     
-    // Инициализация очереди
-    void* queue = queue_init(8);
-    if (!queue) {
-        printf("Ошибка инициализации очереди!\n");
-        return 1;
-    }
+    // 1. Инициализация
+    void* queue = queue_init(4);
     printf("1. Очередь инициализирована\n");
-    print_queue(queue, "Состояние очереди:");
+    print_queue(queue);
+    debug_queue(queue);
     
-    // Добавление элементов в конец
-    printf("2. Добавляем элементы: 10, 21, 30, 41, 52\n");
+    // 2. Добавление элементов
+    printf("\n2. Добавляем элементы: 10, 21, 30, 41, 52\n");
     queue_push_back(queue, 10);
     queue_push_back(queue, 21);
     queue_push_back(queue, 30);
     queue_push_back(queue, 41);
     queue_push_back(queue, 52);
-    print_queue(queue, "После добавления элементов:");
+    printf("После добавления элементов:\n");
+    print_queue(queue);
+    debug_queue(queue);
     
-    // Подсчет четных чисел
-    uint64_t even_count = queue_count_even(queue);
-    printf("3. Количество четных чисел: %lu\n\n", even_count);
+    // 3. Количество четных чисел
+    printf("\n3. Количество четных чисел: %ld\n", queue_count_even(queue));
+    printf("После подсчета четных чисел:\n");
+    print_queue(queue); // Должна остаться неизменной
+    debug_queue(queue);
     
-    // Подсчет чисел, оканчивающихся на 1
-    uint64_t ends_with_1_count = queue_count_ends_with_1(queue);
-    printf("4. Количество чисел, оканчивающихся на 1: %lu\n\n", ends_with_1_count);
+    // 4. Количество чисел, оканчивающихся на 1
+    printf("\n4. Количество чисел, оканчивающихся на 1: %ld\n", queue_count_ends_with_1(queue));
+    printf("После подсчета чисел:\n");
+    print_queue(queue); // Должна остаться неизменной
+    debug_queue(queue);
     
-    // Удаление из начала
-    printf("5. Удаляем элементы из начала:\n");
-    for (int i = 0; i < 2; i++) {
-        uint64_t value = queue_pop_front(queue);
-        printf("   Извлечено: %lu\n", value);
-    }
-    print_queue(queue, "После удаления двух элементов:");
+    // 5. Удаление из начала
+    printf("\n5. Удаляем элементы из начала:\n");
+    printf("   Извлечено: %ld\n", queue_pop_front(queue));
+    printf("   Извлечено: %ld\n", queue_pop_front(queue));
+    printf("После удаления двух элементов:\n");
+    print_queue(queue);
+    debug_queue(queue);
     
-    // Заполнение случайными числами
-    printf("6. Заполняем очередь 5 случайными числами\n");
+    // 6. Заполнение случайными числами
+    printf("\n6. Заполняем очередь 5 случайными числами\n");
     queue_fill_random(queue, 5);
-    print_queue(queue, "После заполнения случайными числами:");
+    printf("После заполнения случайными числами:\n");
+    print_queue(queue);
+    debug_queue(queue);
     
-    // Подсчеты после заполнения случайными числами
-    even_count = queue_count_even(queue);
-    ends_with_1_count = queue_count_ends_with_1(queue);
-    printf("7. Статистика после случайного заполнения:\n");
-    printf("   Четных чисел: %lu\n", even_count);
-    printf("   Чисел, оканчивающихся на 1: %lu\n\n", ends_with_1_count);
+    // 7. Статистика после случайного заполнения
+    printf("\n7. Статистика после случайного заполнения:\n");
+    printf("   Четных чисел: %ld\n", queue_count_even(queue));
+    printf("   Числа, оканчивающихся на 1: %ld\n", queue_count_ends_with_1(queue));
+    printf("После статистики:\n");
+    print_queue(queue);
+    debug_queue(queue);
     
-    // Удаление четных чисел
-    printf("8. Удаляем все четные числа (нечетные добавляются обратно)\n");
+    // 8. Удаление четных чисел
+    printf("\n8. Удаляем все четные числа (нечетные добавляются обратно)\n");
     queue_remove_even(queue);
-    print_queue(queue, "После удаления четных чисел:");
+    printf("После удаления четных чисел:\n");
+    print_queue(queue);
+    debug_queue(queue);
     
-    // Финальная статистика
-    even_count = queue_count_even(queue);
-    ends_with_1_count = queue_count_ends_with_1(queue);
-    printf("9. Финальная статистика:\n");
-    printf("   Четных чисел: %lu\n", even_count);
-    printf("   Чисел, оканчивающихся на 1: %lu\n\n", ends_with_1_count);
+    // 9. Финальная статистика
+    printf("\n9. Финальная статистика:\n");
+    printf("   Четных чисел: %ld\n", queue_count_even(queue));
+    printf("   Числа, оканчивающихся на 1: %ld\n", queue_count_ends_with_1(queue));
+    printf("После финальной статистики:\n");
+    print_queue(queue);
+    debug_queue(queue);
     
-    // Очистка памяти
+    // 10. Очистка
+    printf("\n10. Память освобождается\n");
     queue_destroy(queue);
-    printf("10. Память освобождена\n");
     
     return 0;
 }
