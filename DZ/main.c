@@ -50,20 +50,6 @@ void print_queue(void* queue) {
     free(temp);
 }
 
-// Функция для проверки внутреннего состояния очереди
-void debug_queue(void* queue) {
-    // Получаем указатели на внутренние поля
-    // Это опасно и работает только для отладки!
-    unsigned long* ptr = (unsigned long*)queue;
-    printf("=== ОТЛАДКА ===\n");
-    printf("buffer_ptr: %p\n", (void*)ptr[0]);
-    printf("capacity: %ld\n", ptr[1]);
-    printf("size: %ld\n", ptr[2]);
-    printf("front: %ld\n", ptr[3]);
-    printf("rear: %ld\n", ptr[4]);
-    printf("===============\n");
-}
-
 int main() {
     printf("=== Демонстрация работы очереди на ассемблере ===\n\n");
     
@@ -71,7 +57,6 @@ int main() {
     void* queue = queue_init(4);
     printf("1. Очередь инициализирована\n");
     print_queue(queue);
-    debug_queue(queue);
     
     // 2. Добавление элементов
     printf("\n2. Добавляем элементы: 10, 21, 30, 41, 52\n");
@@ -82,19 +67,12 @@ int main() {
     queue_push_back(queue, 52);
     printf("После добавления элементов:\n");
     print_queue(queue);
-    debug_queue(queue);
     
     // 3. Количество четных чисел
     printf("\n3. Количество четных чисел: %ld\n", queue_count_even(queue));
-    printf("После подсчета четных чисел:\n");
-    print_queue(queue); // Должна остаться неизменной
-    debug_queue(queue);
     
     // 4. Количество чисел, оканчивающихся на 1
     printf("\n4. Количество чисел, оканчивающихся на 1: %ld\n", queue_count_ends_with_1(queue));
-    printf("После подсчета чисел:\n");
-    print_queue(queue); // Должна остаться неизменной
-    debug_queue(queue);
     
     // 5. Удаление из начала
     printf("\n5. Удаляем элементы из начала:\n");
@@ -102,37 +80,28 @@ int main() {
     printf("   Извлечено: %ld\n", queue_pop_front(queue));
     printf("После удаления двух элементов:\n");
     print_queue(queue);
-    debug_queue(queue);
     
     // 6. Заполнение случайными числами
     printf("\n6. Заполняем очередь 5 случайными числами\n");
     queue_fill_random(queue, 5);
     printf("После заполнения случайными числами:\n");
     print_queue(queue);
-    debug_queue(queue);
     
     // 7. Статистика после случайного заполнения
     printf("\n7. Статистика после случайного заполнения:\n");
     printf("   Четных чисел: %ld\n", queue_count_even(queue));
     printf("   Числа, оканчивающихся на 1: %ld\n", queue_count_ends_with_1(queue));
-    printf("После статистики:\n");
-    print_queue(queue);
-    debug_queue(queue);
     
     // 8. Удаление четных чисел
     printf("\n8. Удаляем все четные числа (нечетные добавляются обратно)\n");
     queue_remove_even(queue);
     printf("После удаления четных чисел:\n");
     print_queue(queue);
-    debug_queue(queue);
     
     // 9. Финальная статистика
     printf("\n9. Финальная статистика:\n");
     printf("   Четных чисел: %ld\n", queue_count_even(queue));
     printf("   Числа, оканчивающихся на 1: %ld\n", queue_count_ends_with_1(queue));
-    printf("После финальной статистики:\n");
-    print_queue(queue);
-    debug_queue(queue);
     
     // 10. Очистка
     printf("\n10. Память освобождается\n");

@@ -291,7 +291,7 @@ section '.text' executable
     map_len equ $ - map_template
 
     ; Смещение символов внутри шаблона относительно начала
-    cell_offsets: db 16, 20, 24, 30, 34, 38, 44, 48, 52
+    cell_offsets: db 16, 20, 24, 30, 34, 38, 44, 48, 52, 71, 75, 79
 
 create_map:
     push rbp

@@ -220,7 +220,7 @@ queue_push_back:
     pop r12
     ret
 
-; Удаление из начала очереди - ИСПРАВЛЕНО
+; Удаление из начала очереди
 ; rdi - указатель на очередь
 ; возвращает rax - значение или 0 если очередь пуста
 public queue_pop_front
@@ -244,7 +244,7 @@ queue_pop_front:
 .no_wrap:
     mov [rdi + 24], rdx
     
-    ; Уменьшаем size - КЛЮЧЕВОЕ ИЗМЕНЕНИЕ!
+    ; Уменьшаем size
     dec qword [rdi + 16]
     
     pop rbx
@@ -295,7 +295,7 @@ queue_fill_random:
     pop r12
     ret
 
-; Удаление всех четных чисел - ИСПРАВЛЕНО
+; Удаление всех четных чисел
 ; rdi - указатель на очередь
 public queue_remove_even
 queue_remove_even:
@@ -335,100 +335,131 @@ queue_remove_even:
     pop r12
     ret
 
-; Подсчет количества четных чисел - ИСПРАВЛЕНО (НЕ ИЗМЕНЯЕТ ОЧЕРЕДЬ)
+; Подсчет количества четных чисел
 ; rdi - указатель на очередь
 ; возвращает rax - количество
 public queue_count_even
 queue_count_even:
-    push r12
-    push r13
-    push r14
-    push r15
     push rbx
+    push rcx
+    push rdx
+    push rsi
+    push r8
     
-    mov r12, rdi              ; сохраняем указатель на очередь
-    xor r13, r13              ; счетчик = 0
+    mov rbx, rdi              ; сохраняем указатель на очередь
+    xor rax, rax              ; счетчик = 0
     
-    mov r14, [r12 + 16]       ; size
-    test r14, r14
+    mov rcx, [rbx + 16]       ; size
+    test rcx, rcx
     jz .done
     
-    mov rbx, [r12 + 0]        ; buffer_ptr
-    mov r15, [r12 + 24]       ; front
-    mov rcx, r14              ; счетчик цикла = size
-    mov rdx, r15              ; текущий индекс = front (локальная копия!)
+    mov rsi, [rbx + 0]        ; buffer_ptr
+    mov rdx, [rbx + 24]       ; front
+    mov r8, [rbx + 8]         ; capacity
     
 .count_loop:
-    mov rax, [rbx + rdx*8]    ; получаем элемент
-    test rax, 1               ; проверяем четность
+    ; Получаем элемент по текущему индексу
+    mov rdi, [rsi + rdx*8]
+    
+    ; Проверяем четность
+    test rdi, 1
     jnz .not_even
-    inc r13                   ; четное - увеличиваем счетчик
+    inc rax
 .not_even:
     
-    inc rdx                    ; следующий индекс (локальная переменная!)
-    cmp rdx, [r12 + 8]         ; сравниваем с capacity
+    ; Переходим к следующему индексу
+    inc rdx
+    cmp rdx, r8
     jl .no_wrap
-    xor rdx, rdx               ; заворачиваем в начало
+    xor rdx, rdx
 .no_wrap:
     
-    loop .count_loop           ; продолжаем цикл
+    loop .count_loop
     
 .done:
-    mov rax, r13
+    pop r8
+    pop rsi
+    pop rdx
+    pop rcx
     pop rbx
-    pop r15
-    pop r14
-    pop r13
-    pop r12
     ret
 
-; Подсчет чисел, оканчивающихся на 1 - ИСПРАВЛЕНО (НЕ ИЗМЕНЯЕТ ОЧЕРЕДЬ)
+; Подсчет чисел, оканчивающихся на 1 - ИСПРАВЛЕНО
 ; rdi - указатель на очередь
 ; возвращает rax - количество
 public queue_count_ends_with_1
 queue_count_ends_with_1:
-    push r12
-    push r13
-    push r14
-    push r15
     push rbx
+    push rcx
+    push rdx
+    push rsi
+    push r8
+    push r9
+    push r10
+    push r11
     
-    mov r12, rdi              ; сохраняем указатель на очередь
-    xor r13, r13              ; счетчик = 0
+    mov rbx, rdi              ; указатель на очередь
+    xor rax, rax              ; счетчик = 0
     
-    mov r14, [r12 + 16]       ; size
-    test r14, r14
+    mov rcx, [rbx + 16]       ; size
+    test rcx, rcx
     jz .done
     
-    mov rbx, [r12 + 0]        ; buffer_ptr
-    mov r15, [r12 + 24]       ; front
-    mov rcx, r14              ; счетчик цикла = size
-    mov rdx, r15              ; текущий индекс = front (локальная копия!)
+    mov rsi, [rbx + 0]        ; buffer_ptr
+    mov rdx, [rbx + 24]       ; front
+    mov r8, [rbx + 8]         ; capacity
+    mov r11, 10               ; делитель
     
 .count_loop:
-    mov rax, [rbx + rdx*8]    ; получаем элемент
-    mov r8, rax
-    and r8, 0xF               ; берем последнюю цифру (в 16-ричной системе)
-    cmp r8, 1                 ; сравниваем с 1
-    jne .not_end
-    inc r13                   ; оканчивается на 1 - увеличиваем счетчик
-.not_end:
+    push rcx
+    push rdx
+    push rax
     
-    inc rdx                    ; следующий индекс (локальная переменная!)
-    cmp rdx, [r12 + 8]         ; сравниваем с capacity
+    ; Получаем элемент
+    mov r9, [rsi + rdx*8]
+    
+    ; Проверяем последнюю цифру (остаток от деления на 10)
+    mov rax, r9
+    xor rdx, rdx
+    div r11
+    ; теперь rdx = остаток от деления на 10
+    
+    cmp rdx, 1
+    jne .not_end
+    
+    ; Число оканчивается на 1
+    pop rax
+    inc rax
+    push rax
+    jmp .continue
+    
+.not_end:
+    pop rax
+    push rax
+    
+.continue:
+    pop rax
+    pop rdx
+    pop rcx
+    
+    ; Переходим к следующему индексу
+    inc rdx
+    cmp rdx, r8
     jl .no_wrap
-    xor rdx, rdx               ; заворачиваем в начало
+    xor rdx, rdx
 .no_wrap:
     
-    loop .count_loop           ; продолжаем цикл
+    loop .count_loop
     
 .done:
-    mov rax, r13
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rsi
+    pop rdx
+    pop rcx
     pop rbx
-    pop r15
-    pop r14
-    pop r13
-    pop r12
     ret
 
 ; Получение размера очереди
