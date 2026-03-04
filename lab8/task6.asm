@@ -66,13 +66,16 @@ main:
 
     ; Вычисление формулы: f(x) = (x^2 - pi^2/3)/4
     finit
-    fldpi               ; st0 = pi
-    fmul st0, st0       ; st0 = pi^2
-    fdiv qword [val_3]  ; st0 = pi^2/3
-    fld qword [x]       ; st0 = x, st1 = pi^2/3
-    fmul st0, st0       ; st0 = x^2, st1 = pi^2/3
-    fsubp st1, st0      ; st0 = x^2 - pi^2/3
-    fdiv qword [val_4]  ; st0 = (x^2 - pi^2/3)/4
+    fldpi                   ; st0 = pi
+    fmul st0, st0           ; st0 = pi^2
+    fdiv qword [val_3]      ; st0 = pi^2/3
+
+    fld qword [x]           ; st0 = x, st1 = pi^2/3
+    fmul st0, st0           ; st0 = x^2, st1 = pi^2/3
+
+    fsubrp st1, st0         ; st0 = pi^2/3 - x^2
+    fdiv qword [val_4]      ; st0 = (pi^2/3 - x^2)/4
+
     fstp qword [formula_res]
 
     ; Вычисление ряда: sum = (-1)^n * cos(n*x)/n^2, n от 1 до ∞
